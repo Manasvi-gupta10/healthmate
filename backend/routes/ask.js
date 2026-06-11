@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Search = require('../models/Search');
 const medicineMapping = require('../utils/medicineMapping.json');
+const remediesData = require('../utils/remediesData.json');
 
 const SYSTEM_PROMPTS = {
   medicine: `You are HealthMate, a careful medical-information assistant. The user gives a medicine name. Reply in clean Markdown with these sections (use ## headings):
@@ -17,13 +18,14 @@ One of: **Safe**, **Use with caution**, or **Unsafe**.
 ## Possible Side Effects of Combining
 ## What to do
 End with: *Educational info only — consult a doctor or pharmacist.*`,
-  symptoms: `You are HealthMate. The user lists symptoms. Reply in Markdown:
+  symptoms: `You are HealthMate, a highly accurate medical diagnostic assistant. The user lists symptoms, and may provide their age and duration of symptoms. Use this demographic and temporal data to provide a highly accurate assessment. Reply in Markdown:
 ## Possible Conditions
-A short list (3–5) with a one-line explanation each.
+A short list (3–5) with a one-line explanation each, ranked by likelihood based on the provided symptoms, age, and duration.
 ## Seriousness Level
 One of: **Mild**, **Moderate**, **Serious — see a doctor soon**, **Emergency — seek care now**.
-## Precautions
-End with: *Educational info only — not a diagnosis.*`,
+## Precautions & Recommendations
+Specific next steps to take.
+End with: *Educational info only — not a medical diagnosis.*`,
   remedies: `You are HealthMate. The user names a common problem (cold, acidity, headache, etc.). Reply in Markdown:
 ## Home Remedies
 Bullet list of 4–6 safe, traditional remedies with how to use them.
@@ -45,7 +47,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Feature and query are required' });
     }
 
-    const apiKey = process.env.LOVABLE_API_KEY || process.env.GEMINI_API_KEY || 'fake-key-for-dev';
+    const apiKey = process.env.LOVABLE_API_KEY || process.env.GROQ_API_KEY || 'fake-key-for-dev';
     
     // Call the Lovable AI gateway (or any other OpenAI compatible API like Google Gemini)
     // We will use a mock response for demonstration if no key is provided, 
@@ -134,32 +136,119 @@ router.post('/', async (req, res) => {
       }
     }
 
-    if (!content) {
-      content = "AI response placeholder. Please add LOVABLE_API_KEY to backend/.env";
+    if (feature === 'remedies' && !process.env.GROQ_API_KEY && !process.env.LOVABLE_API_KEY) {
+      const normalizedQuery = query.toLowerCase().trim();
+      const parts = normalizedQuery.split(',').map(s => s.trim()).filter(Boolean);
+      const matchedKeys = [];
 
-    if (apiKey && apiKey !== 'fake-key-for-dev') {
-      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: SYSTEM_PROMPTS[feature] },
-            { role: "user", content: query },
-          ],
-        }),
+      parts.forEach(part => {
+        let matchedKey = null;
+        if (remediesData[part]) {
+          matchedKey = part;
+        } else {
+          if (part.includes('cold')) matchedKey = 'cold';
+          else if (part.includes('cough')) matchedKey = 'cough';
+          else if (part.includes('fever') || part.includes('temperature')) matchedKey = 'fever';
+          else if (part.includes('migraine')) matchedKey = 'migraine';
+          else if (part.includes('headache') || part.includes('head pain')) matchedKey = 'headache';
+          else if (part.includes('acid')) matchedKey = 'acidity';
+          else if (part.includes('constip')) matchedKey = 'constipation';
+          else if (part.includes('diarrhea') || part.includes('loose motion')) matchedKey = 'diarrhea';
+          else if (part.includes('throat')) matchedKey = 'sore throat';
+          else if (part.includes('stomach pain') || part.includes('belly pain') || part.includes('stomach ache')) matchedKey = 'stomach pain';
+          else if (part.includes('indigest') || part.includes('upset stomach')) matchedKey = 'indigestion';
+          else if (part.includes('nausea')) matchedKey = 'nausea';
+          else if (part.includes('vomit')) matchedKey = 'vomiting';
+          else if (part.includes('body pain') || part.includes('body ache')) matchedKey = 'body pain';
+          else if (part.includes('back pain') || part.includes('back ache')) matchedKey = 'back pain';
+          else if (part.includes('toothache') || part.includes('tooth pain')) matchedKey = 'toothache';
+          else if (part.includes('ear pain') || part.includes('ear ache')) matchedKey = 'ear pain';
+          else if (part.includes('allergy') || part.includes('allergies')) matchedKey = 'allergy';
+          else if (part.includes('insomnia') || part.includes('sleep')) matchedKey = 'insomnia';
+          else if (part.includes('stress') || part.includes('anxiety')) matchedKey = 'stress';
+        }
+        if (matchedKey && !matchedKeys.includes(matchedKey)) {
+          matchedKeys.push(matchedKey);
+        }
       });
 
-      if (!response.ok) {
-        throw new Error("AI service unavailable");
+      if (matchedKeys.length > 0) {
+        content = matchedKeys.map(k => `### Remedies for ${k.charAt(0).toUpperCase() + k.slice(1)}\n${remediesData[k]}`).join('\n\n---\n\n');
       }
-      
-      const json = await response.json();
-      content = json.choices?.[0]?.message?.content ?? content;
     }
+
+    if (!content) {
+      if (process.env.GROQ_API_KEY) {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: [
+              { role: "system", "content": SYSTEM_PROMPTS[feature] },
+              { role: "user", "content": query }
+            ]
+          })
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          content = json.choices?.[0]?.message?.content ?? null;
+        } else {
+          console.error("Groq API error status:", response.status);
+          const errText = await response.text();
+          console.error("Groq API error details:", errText);
+          throw new Error("Groq AI service unavailable");
+        }
+      } else if (process.env.LOVABLE_API_KEY) {
+        const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            messages: [
+              { role: "system", content: SYSTEM_PROMPTS[feature] },
+              { role: "user", content: query },
+            ],
+          }),
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          content = json.choices?.[0]?.message?.content ?? null;
+        } else {
+          throw new Error("AI service unavailable");
+        }
+      }
+
+      if (!content) {
+        const availableRemedies = Object.keys(remediesData).map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(', ');
+        content = `## Feature Offline / API Key Required
+
+To query custom symptoms, conditions, or remedies, you need to configure an API key. 
+
+### How to configure:
+1. Open the \`.env\` file in the project root directory.
+2. Add your Groq API key:
+   \`\`\`env
+   GROQ_API_KEY="your_actual_groq_api_key"
+   \`\`\`
+3. Save the file and restart the server.
+
+---
+
+### 💡 Offline Mode Available Remedies
+We have high-quality, pre-configured home remedies available for:
+- ${availableRemedies}
+
+Try selecting or searching for one of the above!`;
+      }
     }
 
     // Save to history

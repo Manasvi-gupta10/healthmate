@@ -3,15 +3,15 @@ export const API_URL = 'http://localhost:5000/api';
 export type Feature = "medicine" | "interaction" | "symptoms" | "remedies" | "diet";
 
 export function getAuthToken() {
-  return localStorage.getItem('token');
+  return sessionStorage.getItem('token');
 }
 
 export function setAuthToken(token: string) {
-  localStorage.setItem('token', token);
+  sessionStorage.setItem('token', token);
 }
 
 export function removeAuthToken() {
-  localStorage.removeItem('token');
+  sessionStorage.removeItem('token');
 }
 
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {

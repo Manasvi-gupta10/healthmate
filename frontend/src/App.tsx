@@ -15,12 +15,14 @@ import AuthedLayout from "./routes/_authenticated";
 const queryClient = new QueryClient();
 
 export default function App() {
+  console.log(import.meta.env.VITE_GEMINI_API_KEY);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<AuthPage />} />
-        
+
         {/* Protected routes */}
         <Route element={<AuthedLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -30,7 +32,7 @@ export default function App() {
           <Route path="/remedies" element={<Remedies />} />
           <Route path="/symptoms" element={<Symptoms />} />
         </Route>
-        
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster richColors position="top-center" />
