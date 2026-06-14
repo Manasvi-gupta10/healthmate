@@ -50,23 +50,30 @@ export function Markdown({ children }: { children: string }) {
   };
   for (const raw of lines) {
     const line = raw.trimEnd();
-    if (/^##\s+/.test(line)) {
+    const headerMatch = line.match(/^(#{1,6})\s+(.*)/);
+    if (headerMatch) {
       flushList();
-      blocks.push(
-        <h3
-          key={key++}
-          className="mt-5 mb-2 font-display text-xl text-foreground"
-        >
-          {inline(line.replace(/^##\s+/, ""))}
-        </h3>,
-      );
-    } else if (/^#\s+/.test(line)) {
-      flushList();
-      blocks.push(
-        <h2 key={key++} className="mt-6 mb-2 font-display text-2xl">
-          {inline(line.replace(/^#\s+/, ""))}
-        </h2>,
-      );
+      const level = headerMatch[1].length;
+      const content = inline(headerMatch[2]);
+      if (level === 1) {
+        blocks.push(
+          <h2 key={key++} className="mt-6 mb-2 font-display text-2xl">
+            {content}
+          </h2>
+        );
+      } else if (level === 2) {
+        blocks.push(
+          <h3 key={key++} className="mt-5 mb-2 font-display text-xl text-foreground">
+            {content}
+          </h3>
+        );
+      } else {
+        blocks.push(
+          <h4 key={key++} className="mt-4 mb-2 font-display text-lg text-foreground font-semibold">
+            {content}
+          </h4>
+        );
+      }
     } else if (/^[-*]\s+/.test(line)) {
       listBuf.push(line.replace(/^[-*]\s+/, ""));
     } else if (line.trim() === "") {

@@ -28,9 +28,10 @@ Specific next steps to take.
 End with: *Educational info only — not a medical diagnosis.*`,
   remedies: `You are HealthMate. The user names a common problem (cold, acidity, headache, etc.). Reply in Markdown:
 ## Home Remedies
-Bullet list of 4–6 safe, traditional remedies with how to use them.
+Bullet list of 4–6 safe, traditional remedies. Format each bullet EXACTLY like this:
+- **Remedy Name**: How to use it.
 ## When to See a Doctor
-End with: *Try gentle remedies first; seek care if symptoms persist.*`,
+End with exactly: *Try gentle remedies first; seek care if symptoms persist.*`,
   diet: `You are HealthMate, a friendly dietician. Input is JSON with age, weight (kg), and condition. Reply in Markdown:
 ## Foods to Eat
 ## Foods to Avoid
@@ -136,10 +137,11 @@ router.post('/', async (req, res) => {
       }
     }
 
-    if (feature === 'remedies' && !process.env.GROQ_API_KEY && !process.env.LOVABLE_API_KEY) {
+    if (feature === 'remedies') {
       const normalizedQuery = query.toLowerCase().trim();
       const parts = normalizedQuery.split(',').map(s => s.trim()).filter(Boolean);
       const matchedKeys = [];
+      let allMatched = true;
 
       parts.forEach(part => {
         let matchedKey = null;
@@ -170,10 +172,17 @@ router.post('/', async (req, res) => {
         if (matchedKey && !matchedKeys.includes(matchedKey)) {
           matchedKeys.push(matchedKey);
         }
+        if (!matchedKey) {
+          allMatched = false;
+        }
       });
 
-      if (matchedKeys.length > 0) {
-        content = matchedKeys.map(k => `### Remedies for ${k.charAt(0).toUpperCase() + k.slice(1)}\n${remediesData[k]}`).join('\n\n---\n\n');
+      if (matchedKeys.length > 0 && allMatched) {
+        if (matchedKeys.length === 1) {
+          content = remediesData[matchedKeys[0]];
+        } else {
+          content = matchedKeys.map(k => `### ${k.charAt(0).toUpperCase() + k.slice(1)} Remedies\n${remediesData[k].replace('## Home Remedies\n', '')}`).join('\n\n---\n\n');
+        }
       }
     }
 
