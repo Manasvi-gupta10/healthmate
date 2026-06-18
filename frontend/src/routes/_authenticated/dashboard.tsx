@@ -69,14 +69,6 @@ const quickCards = [
     color: "text-emerald-500",
     bg: "bg-emerald-500/10",
   },
-  {
-    to: "/diet",
-    icon: Salad,
-    label: "Diet Planner",
-    desc: "Personalized meal suggestions",
-    color: "text-amber-500",
-    bg: "bg-amber-500/10",
-  },
 ] as const;
 
 interface Recent {

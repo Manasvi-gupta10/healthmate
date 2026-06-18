@@ -18,7 +18,6 @@ const items = [
   { to: "/interactions", label: "Drug Interaction", icon: GitMerge },
   { to: "/symptoms", label: "Symptom Checker", icon: Stethoscope },
   { to: "/remedies", label: "Home Remedies", icon: Leaf },
-  { to: "/diet", label: "Diet Planner", icon: Salad },
 ] as const;
 
 export function AppSidebar() {
@@ -80,7 +79,7 @@ export function AppSidebar() {
 export function MobileNav() {
   const location = useLocation();
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 grid grid-cols-6 border-t border-border/40 glass shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 grid grid-cols-5 border-t border-border/40 glass shadow-[0_-10px_40px_rgba(0,0,0,0.05)] pb-safe">
       {items.map(({ to, label, icon: Icon }) => {
         const isActive = location.pathname === to;
         return (

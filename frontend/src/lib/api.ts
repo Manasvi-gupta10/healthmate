@@ -1,6 +1,6 @@
 export const API_URL = 'http://localhost:5000/api';
 
-export type Feature = "medicine" | "interaction" | "symptoms" | "remedies" | "diet";
+export type Feature = "medicine" | "interaction" | "symptoms" | "remedies" | "diet" | "symptom_checker";
 
 export function getAuthToken() {
   return sessionStorage.getItem('token');

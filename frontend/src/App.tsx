@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/sonner";
 import Landing from "./routes/index";
 import AuthPage from "./routes/auth";
 import Dashboard from "./routes/_authenticated/dashboard";
-import Diet from "./routes/_authenticated/diet";
 import Interactions from "./routes/_authenticated/interactions";
 import Medicine from "./routes/_authenticated/medicine";
 import Remedies from "./routes/_authenticated/remedies";
@@ -26,7 +25,6 @@ export default function App() {
         {/* Protected routes */}
         <Route element={<AuthedLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/diet" element={<Diet />} />
           <Route path="/interactions" element={<Interactions />} />
           <Route path="/medicine" element={<Medicine />} />
           <Route path="/remedies" element={<Remedies />} />

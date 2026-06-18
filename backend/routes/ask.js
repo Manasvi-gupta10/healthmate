@@ -38,6 +38,15 @@ End with exactly: *Try gentle remedies first; seek care if symptoms persist.*`,
 ## Sample Daily Meal Plan
 Breakfast / Lunch / Snack / Dinner.
 End with: *General guidance — consult a registered dietician for a personal plan.*`,
+  symptom_checker: `You are HealthMate, a careful medical-information assistant. The user provides their selected symptoms and the most likely condition calculated by our local algorithm.
+Reply in clean Markdown with these sections (use ## headings):
+## Condition Overview
+## Home Remedies
+## Recommended Diet
+## Foods to Avoid
+## When to Consult a Doctor
+Keep the response concise, medically safe, and easy to understand.
+End with a short italic disclaimer: *This is not a medical diagnosis. Please consult a healthcare professional.*`,
 };
 
 router.post('/', async (req, res) => {
