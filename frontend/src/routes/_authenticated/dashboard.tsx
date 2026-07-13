@@ -72,37 +72,25 @@ const quickCards = [
 ] as const;
 
 interface Recent {
-  id: string;
+  _id: string;
   feature: string;
   query: string;
-  created_at: string;
+  createdAt: string;
 }
-interface Reminder {
-  id: string;
-  title: string;
-  remind_at: string;
-  done: boolean;
-}
+
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [name, setName] = useState<string>("");
   const [recent, setRecent] = useState<Recent[]>([]);
-  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [tip] = useState(() => tips[Math.floor(Math.random() * tips.length)]);
-  const [newRem, setNewRem] = useState("");
-  const [newWhen, setNewWhen] = useState("");
 
   const load = async () => {
     if (!user) return;
     try {
-      const [rs, rm] = await Promise.all([
-        apiFetch("/searches").catch(() => []),
-        apiFetch("/reminders").catch(() => [])
-      ]);
+      const rs = await apiFetch("/searches").catch(() => []);
       setName(user.display_name ?? user.email?.split("@")[0] ?? "there");
       setRecent(Array.isArray(rs) ? rs : []);
-      setReminders(Array.isArray(rm) ? rm : []);
     } catch (e) {
       console.error(e);
     }
@@ -112,34 +100,7 @@ export default function Dashboard() {
     load();
   }, [user]);
 
-  const addReminder = async () => {
-    if (!newRem || !newWhen || !user) return;
-    try {
-      await apiFetch("/reminders", {
-        method: "POST",
-        body: JSON.stringify({ title: newRem, remind_at: new Date(newWhen).toISOString() })
-      });
-      setNewRem("");
-      setNewWhen("");
-      load();
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
 
-  const toggleDone = async (r: Reminder) => {
-    try {
-      await apiFetch(`/reminders/${r.id}/toggle`, { method: "PUT" });
-      load();
-    } catch (e) { console.error(e); }
-  };
-
-  const delReminder = async (id: string) => {
-    try {
-      // await apiFetch(`/reminders/${id}`, { method: "DELETE" });
-      load();
-    } catch (e) { console.error(e); }
-  };
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -221,7 +182,7 @@ export default function Dashboard() {
       </section>
 
       {/* Bottom grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6">
         {/* Recent searches */}
         <div className="card-premium p-6">
           <div className="flex items-center justify-between mb-6">
@@ -248,7 +209,7 @@ export default function Dashboard() {
             <ul className="space-y-3">
               {recent.map((r) => (
                 <li
-                  key={r.id}
+                  key={r._id}
                   className="flex items-center gap-4 rounded-2xl border border-border/50 bg-background/50 px-4 py-3 transition-colors hover:bg-muted/50 hover:border-primary/20"
                 >
                   <div className="p-2 bg-secondary rounded-lg">
@@ -263,7 +224,7 @@ export default function Dashboard() {
                         {r.feature}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(r.created_at).toLocaleDateString()}
+                        {new Date(r.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -273,101 +234,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Reminders */}
-        <div className="card-premium p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
-                <Bell className="h-5 w-5" />
-              </div>
-              <h2 className="font-display text-2xl font-bold">Reminders</h2>
-            </div>
-            {reminders.length > 0 && (
-              <span className="text-xs font-bold text-amber-600 bg-amber-500/10 px-3 py-1 rounded-full">
-                {reminders.filter((r) => r.done).length}/{reminders.length} Done
-              </span>
-            )}
-          </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row mb-6">
-            <Input
-              placeholder="E.g. Take Vitamin D..."
-              value={newRem}
-              onChange={(e) => setNewRem(e.target.value)}
-              className="h-12 bg-muted/50 border-border/50 focus-visible:ring-amber-500"
-            />
-            <Input
-              type="datetime-local"
-              value={newWhen}
-              onChange={(e) => setNewWhen(e.target.value)}
-              className="h-12 sm:w-56 bg-muted/50 border-border/50 focus-visible:ring-amber-500"
-            />
-            <Button
-              onClick={addReminder}
-              className="h-12 px-6 shrink-0 bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/25"
-            >
-              <Plus className="h-5 w-5 mr-1.5" /> Add
-            </Button>
-          </div>
-
-          <ul className="space-y-3 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
-            {reminders.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-8 text-center rounded-2xl border border-dashed border-border bg-muted/30">
-                <div className="grid h-16 w-16 place-items-center rounded-full bg-secondary text-muted-foreground mb-4">
-                  <Bell className="h-6 w-6" />
-                </div>
-                <p className="text-base font-semibold text-foreground">
-                  No reminders yet
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Add one above to get started.
-                </p>
-              </div>
-            )}
-            {reminders.map((r) => (
-              <li
-                key={r.id}
-                className={`group flex items-center gap-4 rounded-2xl border px-4 py-3.5 transition-all duration-300 ${
-                  r.done
-                    ? "border-transparent bg-muted/40 opacity-70"
-                    : "border-border/50 bg-background/50 hover:bg-muted/50 hover:border-amber-500/30 hover:shadow-md hover:shadow-amber-500/5"
-                }`}
-              >
-                <button
-                  onClick={() => toggleDone(r)}
-                  className={`shrink-0 transition-transform active:scale-90 ${r.done ? 'text-amber-500' : 'text-muted-foreground hover:text-amber-500'}`}
-                >
-                  {r.done ? (
-                    <CheckCircle2 className="h-6 w-6" />
-                  ) : (
-                    <Circle className="h-6 w-6" />
-                  )}
-                </button>
-                <div className="min-w-0 flex-1">
-                  <span
-                    className={`block truncate font-medium text-[15px] ${r.done ? "line-through text-muted-foreground" : "text-foreground"}`}
-                  >
-                    {r.title}
-                  </span>
-                  <span className="shrink-0 text-[11px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5 block">
-                    {new Date(r.remind_at).toLocaleString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-                <button
-                  onClick={() => delReminder(r.id)}
-                  className="shrink-0 text-muted-foreground/50 hover:text-destructive transition-colors p-2 hover:bg-destructive/10 rounded-lg opacity-0 group-hover:opacity-100"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </div>
   );

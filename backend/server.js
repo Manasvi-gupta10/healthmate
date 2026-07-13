@@ -9,6 +9,7 @@ const User = require('./models/User');
 const Search = require('./models/Search');
 const Reminder = require('./models/Reminder');
 const askRoute = require('./routes/ask');
+const interactionCheckRoute = require('./routes/interactionCheck');
 
 const app = express();
 app.use(cors());
@@ -142,6 +143,7 @@ app.put('/api/reminders/:id/toggle', authenticateToken, async (req, res) => {
 });
 
 app.use('/api/ask', authenticateToken, askRoute);
+app.use('/api/interactions/check', authenticateToken, interactionCheckRoute);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -1,0 +1,20 @@
+[
+  {
+    "drugs": ["paracetamol", "ibuprofen"],
+    "level": "Low",
+    "description": "Generally considered safe when used correctly.",
+    "precautions": "Avoid exceeding the maximum daily dose for either medication to prevent liver and kidney strain."
+  },
+  {
+    "drugs": ["ibuprofen", "aspirin"],
+    "level": "Moderate",
+    "description": "May increase the risk of stomach irritation and bleeding.",
+    "precautions": "Take with food to minimize stomach upset. Consult your doctor if you experience severe abdominal pain."
+  },
+  {
+    "drugs": ["azithromycin", "warfarin"],
+    "level": "High",
+    "description": "May increase bleeding risk. Medical supervision recommended.",
+    "precautions": "Frequent monitoring of your INR is required. Report any unusual bleeding or bruising immediately to your healthcare provider."
+  }
+]

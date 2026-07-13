@@ -1,12 +1,15 @@
 {
-  "dolo 650": "acetaminophen",
-  "crocin": "acetaminophen",
-  "calpol": "acetaminophen",
+  "dolo 650": "paracetamol",
+  "crocin": "paracetamol",
+  "calpol": "paracetamol",
   "azee 500": "azithromycin",
   "augmentin": "amoxicillin",
   "metformin": "metformin",
   "pantocid": "pantoprazole",
   "combiflam": "ibuprofen",
-  "paratitamol": "acetaminophen",
-  "paracetamol": "acetaminophen"
+  "paratitamol": "paracetamol",
+  "paracetamol": "paracetamol",
+  "acetaminophen": "paracetamol",
+  "aspirin": "aspirin",
+  "warfarin": "warfarin"
 }

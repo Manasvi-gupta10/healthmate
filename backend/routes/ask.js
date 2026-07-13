@@ -65,36 +65,7 @@ router.post('/', async (req, res) => {
     
     let content = null;
 
-    if (feature === 'medicine') {
-      try {
-        const normalizedQuery = query.toLowerCase().trim();
-        const genericMedicine = medicineMapping[normalizedQuery] || normalizedQuery;
-        
-        const fdaResponse = await fetch(`https://api.fda.gov/drug/label.json?search=openfda.generic_name:"${encodeURIComponent(genericMedicine)}"&limit=1`);
-        
-        if (fdaResponse.ok) {
-          const data = await fdaResponse.json();
-          if (data.results && data.results.length > 0) {
-            const drug = data.results[0];
-            const uses = drug.indications_and_usage ? drug.indications_and_usage[0] : 'Information not available.';
-            const sideEffects = drug.adverse_reactions ? drug.adverse_reactions[0] : (drug.warnings ? drug.warnings[0] : 'Information not available.');
-            const precautions = drug.precautions ? drug.precautions[0] : (drug.warnings ? drug.warnings[0] : 'Information not available.');
-            const overdose = drug.overdosage ? drug.overdosage[0] : (drug.warnings ? drug.warnings[0] : 'Information not available.');
-            const dosage = drug.dosage_and_administration ? drug.dosage_and_administration[0] : 'Information not available.';
-            const manufacturer = drug.openfda && drug.openfda.manufacturer_name ? drug.openfda.manufacturer_name[0] : 'Unknown Manufacturer';
-            
-            content = `## Uses\n${uses}\n\n## Dosage\n${dosage}\n\n## Common Side Effects\n${sideEffects}\n\n## Precautions\n${precautions}\n\n## Overdose Warning\n${overdose}\n\n## Manufacturer\n${manufacturer}\n\n*Educational info only — consult a doctor.*`;
-          } else {
-            return res.status(404).json({ message: "Medicine not found. Please check the spelling or try a valid medicine name." });
-          }
-        } else {
-           return res.status(404).json({ message: "Medicine not found. Please check the spelling or try a valid medicine name." });
-        }
-      } catch (fdaError) {
-        console.error("FDA API Error:", fdaError);
-        return res.status(500).json({ message: "Failed to fetch medicine data. Please try again later." });
-      }
-    } else if (feature === 'interaction') {
+    if (feature === 'interaction') {
       try {
         const parts = query.split(' + ');
         if (parts.length !== 2) {
