@@ -60,7 +60,7 @@ Database:-
 
 APIs & Services:-
 
-* OpenFDA API
+* RxNAV API
 * Groq API
 
 
